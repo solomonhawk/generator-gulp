@@ -1,11 +1,9 @@
-var src  = <%= config.get('sourceDir') %>;
-var dest = <%= config.get('destinationDir') %>;
+var src  = './<%= config.get("sourceDir") %>';
+var dest = './<%= config.get("destinationDir") %>';
 
 module.exports = {
   serverport: 3000,
-  <% if (livereload) { %>
-  livereload: {
-  }, <% } if (browsersync) { %>
+  <% if (browsersync) { %>
   browserSync: {
     server: {
       baseDir: [dest, src]
@@ -18,7 +16,7 @@ module.exports = {
   },
 
   scripts: {
-    src: '' + src + '/javascript/**/*.{js, coffee}',
+    src: '' + src + '/javascript/**/*' + jsExt,
     dest: dest
   },
 

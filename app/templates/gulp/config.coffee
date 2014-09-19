@@ -1,13 +1,11 @@
 # not up to date
 
-src  = <%= config.get('sourceDir') %>
-dest = <%= config.get('destinationDir') %>
+src  = './<%= config.get("sourceDir") %>'
+dest = './<%= config.get("destinationDir") %>'
 
 module.exports =
   serverport: 3000
-  <% if (livereload) { %>
-  livereload: true
-  <% } if (browsersync) { %>
+  <% if (browsersync) { %>
   browserSync:
     server:
       baseDir: [dest, src]

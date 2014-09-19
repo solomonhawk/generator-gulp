@@ -13,6 +13,7 @@ With inspiration from [gulp-starter](https://github.com/greypants/gulp-starter) 
 * Add more questions that are useful
 * Find a more logical ordering for the remaining ones
 * Possibly break up the prompting into multiple, separate logical sections? (don't know if this is kosher)
+* Get some tests set up once the functionality more clear
 * Publish to npm
 
 ## How do I use it?
@@ -27,9 +28,7 @@ From within your project directory:
 
 Simply answer the questions!
 
-
 **In the meantime**: clone this repo to your machine somewhere and run `npm link` from that directory. You'll be able to run `yo gulp` provided you have run `npm install -g yo`.
-
 
 ### Some notes about the choices:
 

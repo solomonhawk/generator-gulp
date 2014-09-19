@@ -3,6 +3,7 @@ var keyMirror = require('keymirror');
 var path      = require('path');
 var util      = require('util');
 var yeoman    = require('yeoman-generator');
+var fs        = require('fs');
 var yosay     = require('yosay');
 
 var GulpGenerator = module.exports = function GulpGenerator(args, options, config) {
@@ -21,54 +22,32 @@ GulpGenerator.prototype.askFor = function askFor() {
     this.log(chalk.green('Please tell me what you want from your gulp build process.'));
   }
 
-  /*
-  ### Prompts ###
+  var transforms = {
+    "coffeescript": {
+      "transformer": "coffeeify",
+      "extension": ".coffee"
+    },
+    "handlebars": {
+      "transformer": "hbsfy",
+      "extension": ".hbs"
+    },
+    "react": {
+      "transformer": "reactify",
+      "extension": ".jsx"
+    },
+    "haml": {
+      "transformer": "hamlify",
+      "extension": ".haml"
+    }
+  }
 
-  1. *Which flavor of CSS?
-    (*) SCSS
-    ( ) SASS
-    ( ) Vanilla
-
-  2. *Which flavor of JS?
-    (*) Vanilla
-    ( ) Coffeescript [ -> if CS, config as .coffee ]
-
-  3. *Would you like to use Browserify or Webpack?
-    ( ) Browserify
-    ( ) Webpack
-    ( ) Nope
-
-  4. *Which of these would you like included?
-
-    -- Additional Gulp Tasks
-    [ ] Image Sprites
-    [ ] Iconfont
-    [ ] Production (minify + rev)
-
-    -- Transforms
-    [ ] Coffeescript
-    [ ] Handlebars
-    [ ] React JSX
-    [ ] Haml
-
-    -- Dependencies
-    [ ] Jquery
-    [ ] Underscore
-    [ ] Angular
-
-  5. Input directory? (default: './src')
-  6. Output directory? (default: './dist')
-  7. Javascript directory? (default: './src/javascripts')
-  8. Stylesheet directory? (default: './src/stylesheets')
-
-  */
   var includePacker = function(answers) {
     return answers.packer !== 'none';
   };
 
   var excludeCoffeescript = function(answers) {
     if (answers.js == 'javascript') {
-      return "Disabled because you chose 'javascript'."
+      return "Disabled because you didn't choose 'Coffeescript'."
     }
   };
 
@@ -96,7 +75,7 @@ GulpGenerator.prototype.askFor = function askFor() {
       name: 'SASS',
       value: 'sass'
     },{
-      name: 'CSS',
+      name: 'CSS Plain',
       value: 'css'
     }]
   },{
@@ -106,7 +85,7 @@ GulpGenerator.prototype.askFor = function askFor() {
     choices: [{
       name: 'Javascript',
       value: 'javascript'
-    }, {
+    },{
       name: 'Coffeescript',
       value: 'coffeescript'
     }]
@@ -126,9 +105,6 @@ GulpGenerator.prototype.askFor = function askFor() {
     },{
       name: 'React',
       value: 'react',
-    },{
-      name: 'Angular',
-      value: 'angular'
     }]
   },{
     name: 'sourceDir',
@@ -136,7 +112,7 @@ GulpGenerator.prototype.askFor = function askFor() {
     default: 'src'
   },{
     name: 'destinationDir',
-    message: 'Output directory?',
+    message: 'Build directory?',
     default: 'dist'
   },{
     name: 'javascriptsDir',
@@ -146,6 +122,60 @@ GulpGenerator.prototype.askFor = function askFor() {
     name: 'stylesheetsDir',
     message: 'Stylesheets directory?',
     default: 'stylesheets'
+  },{
+    name: 'fontsDir',
+    message: 'Fonts directory?',
+    default: 'fonts'
+  },{
+    type: 'confirm',
+    name: 'singleAssetsDir',
+    message: 'Output all assets to one directory?',
+    default: false
+  },{
+    when: function(answers) { return answers.singleAssetsDir; },
+    name: 'assetsDir',
+    message: 'Assets directory?',
+    default: 'public/assets'
+  },{
+    type: 'checkbox',
+    name: 'tasks',
+    message: 'Which of these Tasks would you like me to set up?',
+    choices: [{
+      name: 'Images',
+      value: 'images-task',
+      checked: true
+    },{
+      name: 'Fonts',
+      value: 'fonts-task'
+    },{
+      name: 'Iconfont',
+      value: 'iconfont-task'
+    },{
+      name: 'Sass',
+      value: 'sass-task',
+      checked: true
+    },{
+      name: 'Bundle JS',
+      value: 'bundle-task',
+      checked: true
+    },{
+      name: 'Markup',
+      value: 'markup-task',
+      checked: true
+    },{
+      name: 'Production',
+      value: 'production-task',
+      checked: true
+    },{
+      name: 'Imagesprites',
+      value: 'sprites-task'
+    },{
+      name: 'SVG Imagesprites',
+      value: 'svg-sprites-task'
+    },{
+      name: 'Server',
+      value: 'server-task'
+    }]
   },{
     type: 'list',
     name: 'packer',
@@ -164,7 +194,8 @@ GulpGenerator.prototype.askFor = function askFor() {
     when: includePacker,
     name: 'bundleEntries',
     message: 'Bundle entry points: (comma-separated list of filenames, sans extension)',
-    filter: function(input) { return input.split(', '); }
+    filter: function(input) { return input.split(', '); },
+    default: 'application'
   },{
     when: includePacker,
     type: 'checkbox',
@@ -172,31 +203,28 @@ GulpGenerator.prototype.askFor = function askFor() {
     message: 'Do you need any source transforms?',
     choices: [{
       name: 'Coffeescript',
-      value: 'coffeeify',
+      value: 'coffeescript',
       disabled: excludeCoffeescript,
       checked: true
     },{
       name: 'Handlebars',
-      value: 'hbsfy'
+      value: 'handlebars'
     },{
       name: 'React JSX',
-      value: 'reactify',
+      value: 'react',
       disabled: excludeReactify,
       checked: true
     },{
       name: 'Haml',
-      value: 'hamlify'
+      value: 'haml'
     }]
   },{
     type: 'list',
     name: 'syncer',
-    message: 'Would you like to use BrowserSync or Livereload?',
+    message: 'Would you like to use BrowserSync?',
     choices: [{
       name: 'BrowserSync',
       value: 'browsersync'
-    },{
-      name: 'Livereload',
-      value: 'livereload'
     },{
       name: 'Nope',
       value: 'none'
@@ -204,19 +232,10 @@ GulpGenerator.prototype.askFor = function askFor() {
   },{
     type: 'checkbox',
     name: 'moreGulpTasks',
-    message: 'Would you like to include any of these?',
+    message: 'Would you like to support any of these?',
     choices: [{
-      name: 'Image Sprites Task',
-      value: 'imagesprites'
-    },{
-      name: 'Iconfont Task',
-      value: 'iconfont'
-    },{
       name: 'Favicons Generation',
       value: 'favicons'
-    },{
-      name: 'Production Task (minify / version)',
-      value: 'production'
     },{
       name: 'Combine Media Queries',
       value: 'combinequeries'
@@ -226,12 +245,7 @@ GulpGenerator.prototype.askFor = function askFor() {
   this.prompt(prompts, function (answers) {
     console.log(answers);
 
-    this.browsersync = (answers.syncer == 'browsersync');
-    this.livereload  = (answers.syncer == 'livereload');
-
-    this.browserify  = (answers.packer == 'browserify');
-    this.webpack     = (answers.packer == 'webpack');
-
+    // ***** CHOICES *****
     this.scss        = (answers.css == 'scss');
     this.sass        = (answers.css == 'sass');
     this.css         = (answers.css == 'css');
@@ -240,59 +254,105 @@ GulpGenerator.prototype.askFor = function askFor() {
     this.coffee      = (answers.js == 'coffeescript');
     this.jsExt       = (answers.js == 'javascript' ? '.js' : '.coffee');
 
-    this.bundleEntries = (answers.bundleEntries || []).forEach(function(v) {
+    this.browsersync = (answers.syncer == 'browsersync');
+
+    this.browserify  = (answers.packer == 'browserify');
+    this.webpack     = (answers.packer == 'webpack');
+
+
+    // ***** BUNDLES *****
+    this.bundleEntries = (answers.bundleEntries || []).map(function(v) {
       return v + this.jsExt;
     });
 
-    // coffeeify, hamlify, reactify, hbsify
+    this.transformers = (answers.transforms || []).map(function(v) {
+      return transforms[v].transformer
+    });
+
+    this.browserifyExts = (answers.transforms || []).map(function(v) {
+      return transforms[v].extension
+    });
+
+
+    // ***** INCLUSIONS *****
     this.transforms          = keyMirror(objFromArr(answers.transforms));
-    // imagesprites, iconfont, favicons, production, combinequeries
-    this.moreGulpTasks       = keyMirror(objFromArr(answers.moreGulpTasks));
-    // jquery, underscore, angular, backbone
+    this.includedTasks       = keyMirror(objFromArr(answers.tasks));
     this.projectDependencies = keyMirror(objFromArr(answers.projectDependencies));
 
+
+    // ***** PATHS *****
+    if (answers.assetsDir) {
+      this.javascriptsDest = this.stylesheetsDest = answers.assetsDir;
+    } else {
+      this.javascriptsDest = answers.sourceDir + '/' + answers.javascriptsDir;
+      this.stylesheetsDest = answers.sourceDir + '/' + answers.stylesheetsDir;
+    }
+
+    // ***** SET CONFIG *****
     this.config.set({
       'sourceDir'      : answers.sourceDir,
       'destinationDir' : answers.destinationDir,
       'javascriptsDir' : answers.javascriptsDir,
-      'stylesheetsDir' : answers.stylesheetsDir
+      'stylesheetsDir' : answers.stylesheetsDir,
+      'assetsDir'      : answers.assetsDir
     });
-
-    // set up paths
-
-    //console.log(this.config.getAll());
 
     done();
   }.bind(this));
 };
 
+// copy and compile the gulp config
 GulpGenerator.prototype.writeGulpConfig = function () {
   this.configFile = 'gulp/config' + this.jsExt
   this.gulpConfig = this.readFileAsString(path.join(this.sourceRoot(), this.configFile));
   this.gulpConfig = this.engine(this.gulpConfig, this);
 };
 
+// copy the gulpfile
 GulpGenerator.prototype.gulpfile = function () {
-  // copy the gulpfile
-  this.template('gulpfile.js');
+  this.template('_gulpfile.js', 'gulpfile.js');
 };
 
+// scaffold all the files and folders
 GulpGenerator.prototype.scaffold = function () {
-  // make gulp folders
-  this.mkdir('gulp');
-  this.mkdir('gulp/tasks');
-  this.mkdir('gulp/util');
-
   var config = this.config.getAll();
 
+  // make gulp folders
+  this.mkdir('gulp');
+
+  // copy gulp/util files
+  this.directory('gulp/util');
+
+  // write the gulp config
+  this.write(this.configFile, this.gulpConfig);
+
+  // make source and dest folder
   this.mkdir(config.sourceDir);
   this.mkdir(config.destinationDir);
 
+  // make css and js source dirs
   this.mkdir(config.sourceDir + '/' + config.javascriptsDir);
   this.mkdir(config.sourceDir + '/' + config.stylesheetsDir);
 
-  // copy the gulp config
-  this.write(this.configFile, this.gulpConfig);
+  // make css and js dest dirs
+  this.mkdir(this.javascriptsDest);
+  this.mkdir(this.stylesheetsDest);
+
+  // find, copy, and compile gulp tasks
+  var jsrx = new RegExp('(' + this.jsExt + ')\b', 'i');
+
+  var tasks = fs.readdirSync(path.join(this.sourceRoot() + '/gulp/tasks/')).filter(function(value) {
+    return jsrx.test(value);
+  });
+
+  tasks.forEach(function(task) {
+    this.template('/gulp/tasks/' + task);
+  });
+
+  if (includedTasks.iconfont) {
+    this.copy('gulp/tasks/templates/iconfont' + this.cssExt);
+  };
+
 };
 
 GulpGenerator.prototype.packageJSON = function () {
