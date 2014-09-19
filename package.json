@@ -1,0 +1,16 @@
+{
+  "name": "generator-gulp",
+  "version": "0.1.0",
+  "description": "",
+  "keywords": [
+    "yeoman-generator"
+  ],
+  "dependencies": {
+    "yeoman-generator": "^0.17.3",
+    "chalk": "^0.5.1",
+    "yosay": "^1.0.0"
+  },
+  "devDependencies": {
+    "keymirror": "^0.1.0"
+  }
+}
