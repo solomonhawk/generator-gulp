@@ -34,8 +34,8 @@ module.exports = {
   webpack: {
   }, <% } if (browserify) { %>
   browserify: {
-    entries: [src + '/' javascript/app.coffee'],
-    extensions: <% config.get('bundleEntries') %>,
+    entries: <%= bundleEntries %>,
+    extensions: <% config.get('browserifyExts') %>, // not implemented
     bundleName: 'app.js',
     dest: dest
   } <% } %>

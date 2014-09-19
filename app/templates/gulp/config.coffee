@@ -1,3 +1,5 @@
+# not up to date
+
 src  = <%= config.get('sourceDir') %>
 dest = <%= config.get('destinationDir') %>
 

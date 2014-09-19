@@ -155,7 +155,7 @@ GulpGenerator.prototype.askFor = function askFor() {
       value: 'none'
     },{
       name: 'Browserify',
-      value: 'Browserify'
+      value: 'browserify'
     },{
       name: 'Webpack',
       value: 'webpack'
