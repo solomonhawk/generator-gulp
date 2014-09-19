@@ -1,16 +1,24 @@
 {
   "name": "generator-gulp",
   "version": "0.1.0",
-  "description": "",
+  "description": "Scaffold out a gulp build process",
   "keywords": [
-    "yeoman-generator"
+    "yeoman-generator",
+    "gulp",
+    "front-end",
+    "modernizr",
+    "jquery",
+    "browserify"
   ],
   "dependencies": {
-    "yeoman-generator": "^0.17.3",
     "chalk": "^0.5.1",
-    "yosay": "^1.0.0"
+    "keymirror": "^0.1.0",
+    "yeoman-generator": "^0.17.3",
+    "yosay": "^1.0.0",
+    "wiredep": "^1.4.3"
   },
-  "devDependencies": {
-    "keymirror": "^0.1.0"
+  "peerDependencies": {
+    "yo": ">=1.0.0",
+    "gulp": ">=3.8.7"
   }
 }
